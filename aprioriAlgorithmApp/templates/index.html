@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Data Mining Apriori Algorithm</title>
+    <script>
+        async function submitForm(event) {
+            event.preventDefault();
+            const formData = new FormData();
+            const fileInput = document.getElementById("file");
+            const minSupportInput = document.getElementById("min_support");
+
+            formData.append("file", fileInput.files[0]);
+            formData.append("min_support", minSupportInput.value);
+
+            const response = await fetch("/process_csv", {
+                method: "POST",
+                body: formData
+            });
+            const data = await response.json();
+            document.getElementById("output").textContent = JSON.stringify(data.result, null, 2);
+        }
+    </script>
+</head>
+<body>
+    <h1>Data Mining Apriori Algorithm at Google App Engine</h1>
+    
+    <form id="uploadForm" onsubmit="submitForm(event)">
+        <label for="file">Input file:</label>
+        <input type="file" id="file" name="file" accept=".csv" required><br><br>
+        
+        <label for="min_support">Minimal Support:</label>
+        <input type="number" id="min_support" name="min_support" value="20" required><br><br>
+        
+        <button type="submit">Submit</button>
+    </form>
+
+    <h2>Output</h2>
+    <pre id="output"></pre>
+</body>
+</html>
