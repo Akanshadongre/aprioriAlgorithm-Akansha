@@ -6,7 +6,6 @@ import io
 
 app = Flask(__name__)
 
-# Apriori functions
 def find_frequent_1_itemsets(transactions, min_support):
     item_count = defaultdict(int)
     for transaction in transactions:
@@ -14,50 +13,42 @@ def find_frequent_1_itemsets(transactions, min_support):
             item_count[frozenset([item])] += 1
     return {itemset for itemset, count in item_count.items() if count >= min_support}
 
-def apriori_gen(Lk_minus_1):
+def apriori_gen(frequent_itemsets, k):
     candidates = set()
-    itemsets = list(Lk_minus_1)
+    itemsets = list(frequent_itemsets)
     for i in range(len(itemsets)):
         for j in range(i + 1, len(itemsets)):
             l1, l2 = list(itemsets[i]), list(itemsets[j])
-            if l1[:-1] == l2[:-1]:
-                candidates.add(frozenset(l1 + [l2[-1]]))
+            # Join step: if the first k-2 items are equal, combine to form a k-itemset
+            if l1[:k-2] == l2[:k-2] and l1[k-2] < l2[k-2]:
+                candidate = frozenset(itemsets[i] | itemsets[j])
+                if not has_infrequent_subset(candidate, frequent_itemsets):
+                    candidates.add(candidate)
     return candidates
 
-def has_infrequent_subset(candidate, Lk_minus_1):
-    k = len(candidate)
-    subsets = combinations(candidate, k - 1)
-    return any(frozenset(subset) not in Lk_minus_1 for subset in subsets)
-
-def filter_candidates_by_support(candidates, transactions, min_support):
-    item_count = defaultdict(int)
-    for transaction in transactions:
-        for candidate in candidates:
-            if candidate.issubset(transaction):
-                item_count[candidate] += 1
-    return {itemset for itemset, count in item_count.items() if count >= min_support}
+def has_infrequent_subset(candidate, frequent_itemsets):
+    for subset in combinations(candidate, len(candidate) - 1):
+        if frozenset(subset) not in frequent_itemsets:
+            return True
+    return False
 
 def apriori(transactions, min_support):
-    L1 = find_frequent_1_itemsets(transactions, min_support)
-    L = [L1]
-    k = 2
-    while True:
-        candidates_k = apriori_gen(L[k - 2])
-        candidates_k = {candidate for candidate in candidates_k if not has_infrequent_subset(candidate, L[k - 2])}
-        Lk = filter_candidates_by_support(candidates_k, transactions, min_support)
-        if not Lk:
-            break
+    L = []
+    k = 1
+    Lk = find_frequent_1_itemsets(transactions, min_support)
+    while Lk:
         L.append(Lk)
+        Ck = apriori_gen(Lk, k + 1)
+        item_count = defaultdict(int)
+        for transaction in transactions:
+            # Count candidates that appear in each transaction
+            Ct = {candidate for candidate in Ck if candidate.issubset(transaction)}
+            for candidate in Ct:
+                item_count[candidate] += 1
+        # Filter itemsets meeting min support
+        Lk = {itemset for itemset, count in item_count.items() if count >= min_support}
         k += 1
-    return list(chain(*L))
-
-def format_output(result, csv_input, min_support):
-    """Formats output according to the specified format."""
-    print(f"Input file: {csv_input}")
-    print(f"Minimal support: {min_support}")
-    formatted_output = "{{" + "}{".join(",".join(map(str, sorted(itemset))) for itemset in sorted(result, key=lambda x: (len(x), x))) + "}}"
-    print(formatted_output)
-    print(f"End - total items: {len(frequent_itemsets)}")
+    return set(chain.from_iterable(L))
 
 # Route to display the HTML form
 @app.route('/')
@@ -76,10 +67,16 @@ def process_csv():
     transactions = [row for row in csv_input]
     
     # Run Apriori algorithm
-    result = apriori(transactions, min_support)
-    format_output(result, csv_input, min_support)
+    frequent_itemsets = apriori(transactions, min_support)
+    format_output(frequent_itemsets, args.input_file, min_support)
+
+    print(f"Input file: {input_file}")
+    print(f"Minimal support: {min_support}")
+    formatted_output = "{{" + "}{".join(",".join(map(str, sorted(itemset))) for itemset in sorted(frequent_itemsets, key=lambda x: (len(x), x))) + "}}"
+    print(formatted_output)
+    print(f"End - total items: {len(frequent_itemsets)}")
     # result = [list(itemset) for itemset in result]
-    return jsonify(result=result)
+    return jsonify(result=formatted_output)
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
