@@ -51,6 +51,14 @@ def apriori(transactions, min_support):
         k += 1
     return list(chain(*L))
 
+def format_output(result, csv_input, min_support):
+    """Formats output according to the specified format."""
+    print(f"Input file: {csv_input}")
+    print(f"Minimal support: {min_support}")
+    formatted_output = "{{" + "}{".join(",".join(map(str, sorted(itemset))) for itemset in sorted(result, key=lambda x: (len(x), x))) + "}}"
+    print(formatted_output)
+    print(f"End - total items: {len(frequent_itemsets)}")
+
 # Route to display the HTML form
 @app.route('/')
 def index():
@@ -69,7 +77,8 @@ def process_csv():
     
     # Run Apriori algorithm
     result = apriori(transactions, min_support)
-    result = [list(itemset) for itemset in result]
+    format_output(result, csv_input, min_support)
+    # result = [list(itemset) for itemset in result]
     return jsonify(result=result)
 
 if __name__ == "__main__":
