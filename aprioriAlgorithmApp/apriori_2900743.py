@@ -1,10 +1,21 @@
 import csv
 import time
+import os
 from collections import defaultdict, Counter
 from itertools import combinations
 from flask import Flask, request, jsonify, render_template, redirect, url_for
 
 app = Flask(__name__)
+
+# Path where files will be uploaded
+UPLOAD_FOLDER = './uploads'
+
+# Ensure the uploads folder exists
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
+# Set the upload folder for Flask to use
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 def load_transactions(file_path):
     transactions = []
@@ -75,7 +86,8 @@ def run_apriori():
     file = request.files['file']
     min_support = int(request.form.get('min_support', 1))
 
-    file_path = f"./uploads/{file.filename}"
+    # Save the file to the uploads folder
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
     file.save(file_path)
 
     try:
