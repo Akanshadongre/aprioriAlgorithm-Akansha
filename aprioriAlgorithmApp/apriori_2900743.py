@@ -1,19 +1,27 @@
 import csv
+import os
 import time
 from collections import defaultdict, Counter
 from itertools import combinations
 from flask import Flask, request, jsonify, render_template
 
+# Initialize Flask app
 app = Flask(__name__)
 
-def load_transactions(file_path):
+# Set up upload folder
+UPLOAD_FOLDER = './uploads'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# Load transactions from a CSV file or stream
+def load_transactions(file_stream):
     transactions = []
-    with open(file_path, 'r') as file:
-        reader = csv.reader(file)
-        for row in reader:
-            transactions.append(set(row))
+    reader = csv.reader(file_stream)
+    for row in reader:
+        transactions.append(set(row))
     return transactions
 
+# Get frequent 1-itemsets
 def get_frequent_1_itemsets(transactions, min_support):
     item_counts = Counter()
     for transaction in transactions:
@@ -21,6 +29,7 @@ def get_frequent_1_itemsets(transactions, min_support):
             item_counts[frozenset([item])] += 1
     return {itemset: count for itemset, count in item_counts.items() if count >= min_support}
 
+# Generate candidate itemsets
 def apriori_gen(itemsets, k):
     candidates = set()
     itemsets = list(itemsets)
@@ -31,12 +40,14 @@ def apriori_gen(itemsets, k):
                 candidates.add(union_set)
     return candidates
 
+# Check for infrequent subsets
 def has_infrequent_subset(candidate, frequent_itemsets):
     for subset in combinations(candidate, len(candidate) - 1):
         if frozenset(subset) not in frequent_itemsets:
             return True
     return False
 
+# Filter candidates based on minimum support
 def filter_candidates(transactions, candidates, min_support):
     item_counts = defaultdict(int)
     for transaction in transactions:
@@ -45,6 +56,7 @@ def filter_candidates(transactions, candidates, min_support):
                 item_counts[candidate] += 1
     return {itemset: count for itemset, count in item_counts.items() if count >= min_support}
 
+# Apriori algorithm implementation
 def apriori(transactions, min_support):
     frequent_itemsets = []
     current_itemsets = get_frequent_1_itemsets(transactions, min_support)
@@ -56,6 +68,7 @@ def apriori(transactions, min_support):
         k += 1
     return [set(itemset) for itemset in frequent_itemsets]
 
+# Get maximal frequent itemsets
 def get_maximal_frequent_itemsets(frequent_itemsets):
     maximal = []
     for itemset in sorted(frequent_itemsets, key=len, reverse=True):
@@ -63,31 +76,39 @@ def get_maximal_frequent_itemsets(frequent_itemsets):
             maximal.append(itemset)
     return maximal
 
+# Home route
 @app.route('/')
 def index():
-    return render_template('index.html')  # Create an index.html file for the form
+    return render_template('index.html')  # Render the form in index.html
 
+# Process the uploaded CSV and run Apriori
 @app.route('/run_apriori', methods=['POST'])
 def run_apriori():
     if 'file' not in request.files:
         return jsonify({'error': 'No file uploaded'}), 400
 
     file = request.files['file']
-    min_support = int(request.form.get('min_support', 1))
-
-    file_path = f"./uploads/{file.filename}"
-    file.save(file_path)
+    try:
+        min_support = int(request.form.get('min_support', 1))
+        if min_support <= 0:
+            raise ValueError("Minimal support must be greater than zero.")
+    except (ValueError, TypeError):
+        return jsonify({'error': 'Invalid minimal support value'}), 400
 
     try:
-        transactions = load_transactions(file_path)
+        transactions = load_transactions(file.stream)
+        if not transactions:
+            return jsonify({'error': 'The uploaded file contains no valid transactions'}), 400
+
         start_time = time.time()
         frequent_itemsets = apriori(transactions, min_support)
         maximal_frequent_itemsets = get_maximal_frequent_itemsets(frequent_itemsets)
         maximal_frequent_itemsets.sort(key=lambda x: (len(x), x))
 
-        # Format the itemsets as per your required output
+        # Format the itemsets for output
         formatted_itemsets = [f"{{{','.join(map(str, itemset))}}}" for itemset in maximal_frequent_itemsets]
         end_time = time.time()
+
         response = {
             "Input file": file.filename,
             "Minimal support": min_support,
