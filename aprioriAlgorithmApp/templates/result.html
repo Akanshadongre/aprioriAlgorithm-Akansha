@@ -2,28 +2,16 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Apriori Algorithm Results</title>
+    <title>Apriori Result</title>
 </head>
 <body>
-    <h1>Apriori Algorithm Results</h1>
-    
-    <div id="output"></div>
-    
-    <script>
-        // Retrieve the passed data from the URL query parameter
-        const urlParams = new URLSearchParams(window.location.search);
-        const data = JSON.parse(decodeURIComponent(urlParams.get('data')));
-
-        // Display the results
-        const outputDiv = document.getElementById("output");
-        outputDiv.innerHTML = `
-            <p><strong>Input file:</strong> ${data["Input file"]}</p>
-            <p><strong>Minimal support:</strong> ${data["Minimal support"]}</p>
-            <p><strong>Maximal frequent itemsets:</strong></p>
-            <pre>${data["Maximal frequent itemsets"]}</pre>
-            <p><strong>End - total items:</strong> ${data["End - total items"]}</p>
-            <p><strong>Total running time:</strong> ${data["Total running time"]}</p>
-        `;
-    </script>
+    <h1>Data Mining Apriori Algorithm Result</h1>
+    <p><strong>Input file:</strong> {{ data['Input file'] }}</p>
+    <p><strong>Minimal support:</strong> {{ data['Minimal support'] }}</p>
+    <p><strong>Maximal frequent itemsets:</strong> {{ data['Maximal frequent itemsets'] }}</p>
+    <p><strong>End - total items:</strong> {{ data['End - total items'] }}</p>
+    <p><strong>Total running time:</strong> {{ data['Total running time'] }}</p>
+    <br>
+    <a href="{{ url_for('index') }}">Go back to input form</a>
 </body>
 </html>
