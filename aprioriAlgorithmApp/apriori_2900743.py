@@ -82,19 +82,15 @@ def index():
     return render_template('index.html')  # The form for submitting file and minimal support
 
 @app.route('/run_apriori', methods=['POST'])
+@app.route('/run_apriori', methods=['POST'])
 def run_apriori():
-    # Check if the result is already in the session (prevents resubmission)
-    if 'result' in session:
-        return redirect(url_for('result'))  # If result exists, redirect to result page
-
     if 'file' not in request.files:
         return jsonify({'error': 'No file uploaded'}), 400
 
     file = request.files['file']
     min_support = int(request.form.get('min_support', 1))
 
-    # Save the file to the uploads folder
-    file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+    file_path = f"./uploads/{file.filename}"
     file.save(file_path)
 
     try:
@@ -107,7 +103,6 @@ def run_apriori():
         # Format the itemsets as per your required output
         formatted_itemsets = [f"{{{','.join(map(str, itemset))}}}" for itemset in maximal_frequent_itemsets]
         end_time = time.time()
-
         result = {
             "Input file": file.filename,
             "Minimal support": min_support,
@@ -116,12 +111,10 @@ def run_apriori():
             "Total running time": f"{end_time - start_time:.6f} seconds"
         }
 
-        # Store the result in session
+        # Store result in the session
         session['result'] = result
 
-        # After processing, redirect to result page
-        return redirect(url_for('result'))
-
+        return redirect(url_for('result'))  # Redirect to result page
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
