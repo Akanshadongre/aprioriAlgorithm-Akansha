@@ -2,40 +2,98 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Data Mining Apriori Algorithm</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        label {
+            font-weight: bold;
+        }
+        #output {
+            background-color: #f4f4f4;
+            border: 1px solid #ccc;
+            padding: 10px;
+            overflow: auto;
+            white-space: pre-wrap;
+        }
+    </style>
     <script>
         async function submitForm(event) {
             event.preventDefault();
-            const formData = new FormData();
+            
+            // Validate the file input
             const fileInput = document.getElementById("file");
-            const minSupportInput = document.getElementById("min_support");
+            const file = fileInput.files[0];
+            if (!file) {
+                alert("Please select a file.");
+                return;
+            }
+            if (!file.name.endsWith(".csv")) {
+                alert("Only CSV files are allowed.");
+                return;
+            }
+            if (file.size > 5 * 1024 * 1024) { // 5 MB limit
+                alert("File size must not exceed 5 MB.");
+                return;
+            }
 
-            formData.append("file", fileInput.files[0]);
+            // Validate minimum support
+            const minSupportInput = document.getElementById("min_support");
+            if (minSupportInput.value <= 0) {
+                alert("Minimal support must be greater than zero.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", file);
             formData.append("min_support", minSupportInput.value);
 
-            const response = await fetch("/process_csv", {
-                method: "POST",
-                body: formData
-            });
-            const data = await response.json();
-            document.getElementById("output").textContent = JSON.stringify(data.result, null, 2);
+            try {
+                const response = await fetch("/run_apriori", {
+                    method: "POST",
+                    body: formData,
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Error: ${response.statusText}`);
+                }
+
+                const data = await response.json();
+                if (data.error) {
+                    document.getElementById("output").textContent = `Error: ${data.error}`;
+                } else {
+                    document.getElementById("output").textContent = JSON.stringify(data, null, 2);
+                }
+            } catch (error) {
+                document.getElementById("output").textContent = `Error: ${error.message}`;
+            }
         }
     </script>
 </head>
 <body>
-    <h1>Data Mining Apriori Algorithm at Google App Engine</h1>
+    <h1>Data Mining Apriori Algorithm</h1>
+    <p>Upload a CSV file and specify the minimal support to run the Apriori algorithm.</p>
     
     <form id="uploadForm" onsubmit="submitForm(event)">
         <label for="file">Input file:</label>
         <input type="file" id="file" name="file" accept=".csv" required><br><br>
         
         <label for="min_support">Minimal Support:</label>
-        <input type="number" id="min_support" name="min_support" value="20" required><br><br>
+        <input type="number" id="min_support" name="min_support" value="20" min="1" required><br><br>
         
-        <button type="submit">Submit</button>
+        <button type="submit">Run Apriori</button>
     </form>
 
     <h2>Output</h2>
-    <pre id="output"></pre>
+    <pre id="output">Awaiting submission...</pre>
 </body>
 </html>
