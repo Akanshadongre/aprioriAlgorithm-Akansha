@@ -1,28 +1,34 @@
-from flask import Flask, request, jsonify, render_template
-from itertools import combinations, chain
-from collections import defaultdict
 import csv
-import io
+import time
+from collections import defaultdict, Counter
+from itertools import combinations
+from flask import Flask, request, jsonify, render_template
 
 app = Flask(__name__)
 
-def find_frequent_1_itemsets(transactions, min_support):
-    item_count = defaultdict(int)
+def load_transactions(file_path):
+    transactions = []
+    with open(file_path, 'r') as file:
+        reader = csv.reader(file)
+        for row in reader:
+            transactions.append(set(row))
+    return transactions
+
+def get_frequent_1_itemsets(transactions, min_support):
+    item_counts = Counter()
     for transaction in transactions:
         for item in transaction:
-            item_count[frozenset([item])] += 1
-    return {itemset for itemset, count in item_count.items() if count >= min_support}
+            item_counts[frozenset([item])] += 1
+    return {itemset: count for itemset, count in item_counts.items() if count >= min_support}
 
-def apriori_gen(frequent_itemsets, k):
+def apriori_gen(itemsets, k):
     candidates = set()
-    itemsets = list(frequent_itemsets)
+    itemsets = list(itemsets)
     for i in range(len(itemsets)):
         for j in range(i + 1, len(itemsets)):
-            l1, l2 = list(itemsets[i]), list(itemsets[j])
-            if l1[:k-2] == l2[:k-2] and l1[k-2] < l2[k-2]:
-                candidate = frozenset(itemsets[i] | itemsets[j])
-                if not has_infrequent_subset(candidate, frequent_itemsets):
-                    candidates.add(candidate)
+            union_set = itemsets[i] | itemsets[j]
+            if len(union_set) == k and not has_infrequent_subset(union_set, itemsets):
+                candidates.add(union_set)
     return candidates
 
 def has_infrequent_subset(candidate, frequent_itemsets):
@@ -31,46 +37,67 @@ def has_infrequent_subset(candidate, frequent_itemsets):
             return True
     return False
 
+def filter_candidates(transactions, candidates, min_support):
+    item_counts = defaultdict(int)
+    for transaction in transactions:
+        for candidate in candidates:
+            if candidate.issubset(transaction):
+                item_counts[candidate] += 1
+    return {itemset: count for itemset, count in item_counts.items() if count >= min_support}
+
 def apriori(transactions, min_support):
-    L = []
-    k = 1
-    Lk = find_frequent_1_itemsets(transactions, min_support)
-    while Lk:
-        L.append(Lk)
-        Ck = apriori_gen(Lk, k + 1)
-        item_count = defaultdict(int)
-        for transaction in transactions:
-            Ct = {candidate for candidate in Ck if candidate.issubset(transaction)}
-            for candidate in Ct:
-                item_count[candidate] += 1
-        Lk = {itemset for itemset, count in item_count.items() if count >= min_support}
+    frequent_itemsets = []
+    current_itemsets = get_frequent_1_itemsets(transactions, min_support)
+    k = 2
+    while current_itemsets:
+        frequent_itemsets.extend(current_itemsets.keys())
+        candidates = apriori_gen(current_itemsets.keys(), k)
+        current_itemsets = filter_candidates(transactions, candidates, min_support)
         k += 1
-    return set(chain.from_iterable(L))
+    return [set(itemset) for itemset in frequent_itemsets]
+
+def get_maximal_frequent_itemsets(frequent_itemsets):
+    maximal = []
+    for itemset in sorted(frequent_itemsets, key=len, reverse=True):
+        if not any(set(itemset).issubset(set(max_itemset)) for max_itemset in maximal):
+            maximal.append(itemset)
+    return maximal
 
 @app.route('/')
 def index():
-    return render_template('index.html')
+    return render_template('index.html')  # Create an index.html file for the form
 
-@app.route('/process_csv', methods=['POST'])
-def process_csv():
+@app.route('/run_apriori', methods=['POST'])
+def run_apriori():
+    if 'file' not in request.files:
+        return jsonify({'error': 'No file uploaded'}), 400
+
     file = request.files['file']
-    min_support = int(request.form['min_support'])
+    min_support = int(request.form.get('min_support', 1))
 
-    # Parse CSV file
-    stream = io.StringIO(file.stream.read().decode("UTF8"), newline=None)
-    csv_input = csv.reader(stream)
-    transactions = [row for row in csv_input]
+    file_path = f"./uploads/{file.filename}"
+    file.save(file_path)
 
-    # Run Apriori algorithm
-    frequent_itemsets = apriori(transactions, min_support)
+    try:
+        transactions = load_transactions(file_path)
+        start_time = time.time()
+        frequent_itemsets = apriori(transactions, min_support)
+        maximal_frequent_itemsets = get_maximal_frequent_itemsets(frequent_itemsets)
+        maximal_frequent_itemsets.sort(key=lambda x: (len(x), x))
 
-    # Format output
-    formatted_output = "{{" + "}{".join(",".join(map(str, sorted(itemset))) for itemset in sorted(frequent_itemsets, key=lambda x: (len(x), x))) + "}}"
-    print(f"Minimal support: {min_support}")
-    print(f"Formatted output: {formatted_output}")
-    print(f"End - total items: {len(frequent_itemsets)}")
+        # Format the itemsets as per your required output
+        formatted_itemsets = [f"{{{','.join(map(str, itemset))}}}" for itemset in maximal_frequent_itemsets]
+        end_time = time.time()
+        response = {
+            "Input file": file.filename,
+            "Minimal support": min_support,
+            "Maximal frequent itemsets": f"{{{','.join(formatted_itemsets)}}}",
+            "End - total items": len(maximal_frequent_itemsets),
+            "Total running time": f"{end_time - start_time:.6f} seconds"
+        }
+        return jsonify(response)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
-    return jsonify(result=formatted_output)
-
-if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+if __name__ == '__main__':
+    app.run(debug=True)
