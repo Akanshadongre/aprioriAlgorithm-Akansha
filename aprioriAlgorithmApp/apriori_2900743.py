@@ -3,9 +3,12 @@ import time
 import os
 from collections import defaultdict, Counter
 from itertools import combinations
-from flask import Flask, request, jsonify, render_template, redirect, url_for
+from flask import Flask, request, jsonify, render_template, redirect, url_for, session
 
 app = Flask(__name__)
+
+# Secret key for sessions
+app.secret_key = os.urandom(24)
 
 # Path where files will be uploaded
 UPLOAD_FOLDER = './uploads'
@@ -76,7 +79,7 @@ def get_maximal_frequent_itemsets(frequent_itemsets):
 
 @app.route('/')
 def index():
-    return render_template('index.html')  # The form for file upload
+    return render_template('index.html')  # The form for submitting file and minimal support
 
 @app.route('/run_apriori', methods=['POST'])
 def run_apriori():
@@ -109,18 +112,21 @@ def run_apriori():
             "Total running time": f"{end_time - start_time:.6f} seconds"
         }
 
-        return redirect(url_for('result', data=result))
+        # Store the result in session
+        session['result'] = result
+
+        return redirect(url_for('result'))
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 @app.route('/result')
 def result():
-    data = request.args.get('data')
-    if data:
-        data = eval(data)  # Convert string data back to dictionary
-
-    return render_template('result.html', data=data)
+    result = session.get('result', None)
+    if result:
+        return render_template('result.html', data=result)
+    else:
+        return redirect(url_for('index'))  # Redirect back to the form if no result is found
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000)
