@@ -13,10 +13,14 @@ UPLOAD_FOLDER = './uploads'
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
-# Load transactions from a CSV file or stream
+# Load transactions from a CSV file stream
 def load_transactions(file_stream):
+    """
+    Reads transactions from a CSV file stream.
+    """
     transactions = []
-    reader = csv.reader(file_stream)
+    file_stream.seek(0)  # Ensure the stream is at the beginning
+    reader = csv.reader(file_stream.read().decode('utf-8').splitlines())
     for row in reader:
         transactions.append(set(row))
     return transactions
