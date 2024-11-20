@@ -83,6 +83,10 @@ def index():
 
 @app.route('/run_apriori', methods=['POST'])
 def run_apriori():
+    # Check if the result is already in the session (prevents resubmission)
+    if 'result' in session:
+        return redirect(url_for('result'))  # If result exists, redirect to result page
+
     if 'file' not in request.files:
         return jsonify({'error': 'No file uploaded'}), 400
 
@@ -115,6 +119,7 @@ def run_apriori():
         # Store the result in session
         session['result'] = result
 
+        # After processing, redirect to result page
         return redirect(url_for('result'))
 
     except Exception as e:
@@ -122,11 +127,16 @@ def run_apriori():
 
 @app.route('/result')
 def result():
-    result = session.get('result', None)
-    if result:
-        return render_template('result.html', data=result)
-    else:
-        return redirect(url_for('index'))  # Redirect back to the form if no result is found
+    # Check if result exists in session
+    if 'result' not in session:
+        return redirect(url_for('index'))  # Redirect back to the index page if no result
+    
+    # Get result from session
+    result = session['result']
+    
+    # Render result in a template
+    return render_template('result.html', result=result)
+
 
 if __name__ == '__main__':
     app.run(host="0.0.0.0", port=5000)
