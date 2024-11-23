@@ -3,6 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <title>Data Mining Apriori Algorithm</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
+        h1, h2, h3 {
+            text-align: center;
+        }
+        form {
+            text-align: center;
+            margin: 20px;
+        }
+        #output {
+            margin: 20px auto;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            max-width: 80%;
+            background: #f9f9f9;
+        }
+        #output pre {
+            white-space: pre-wrap; /* Allows wrapping within pre */
+            word-wrap: break-word; /* Breaks long words if needed */
+            max-height: 300px; /* Limits height of the container */
+            overflow-y: auto; /* Adds vertical scroll if content overflows */
+            padding: 10px;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+    </style>
     <script>
         async function submitForm(event) {
             event.preventDefault();
@@ -19,12 +49,13 @@
             });
             const data = await response.json();
             
-            // Display results
+            // Display results in a structured format
             document.getElementById("output").innerHTML = `
                 <p><strong>Minimal Support:</strong> ${data.minimal_support}</p>
                 <p><strong>Execution Time:</strong> ${data.execution_time}</p>
                 <p><strong>Total Count:</strong> ${data.total_count}</p>
-                <pre>${JSON.stringify(data.result, null, 2)}</pre>
+                <h3>Frequent Itemsets:</h3>
+                <pre>${data.result}</pre>
             `;
         }
     </script>
