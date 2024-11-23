@@ -14,58 +14,35 @@ def get_frequent_1_itemsets(transactions, min_support):
             item_counts[frozenset([item])] += 1
     return {itemset: count for itemset, count in item_counts.items() if count >= min_support}
 
-# Generate candidate itemsets of size k
-# def apriori_gen(itemsets, k):
-#     candidates = set()
-#     itemsets = list(itemsets)
-#     for i in range(len(itemsets)):
-#         for j in range(i + 1, len(itemsets)):
-#             union_set = itemsets[i] | itemsets[j]
-#             if len(union_set) == k and not has_infrequent_subset(union_set, itemsets):
-#                 candidates.add(union_set)
-#     return candidates
 
 def apriori_gen(itemsets, k):
     candidates = set()
-    itemsets = sorted(itemsets)
+    itemsets = list(itemsets)
     for i in range(len(itemsets)):
         for j in range(i + 1, len(itemsets)):
-            itemset1, itemset2 = list(itemsets[i]), list(itemsets[j])
-            if itemset1[:k-2] == itemset2[:k-2]:  # Only merge if first (k-2) items are the same
-                candidate = frozenset(itemset1) | frozenset(itemset2)
-                candidates.add(candidate)
+            union_set = itemsets[i] | itemsets[j]
+            if len(union_set) == k and not has_infrequent_subset(union_set, itemsets):
+                candidates.add(union_set)
     return candidates
 
 
-# Check if candidate has any infrequent subset
-# def has_infrequent_subset(candidate, frequent_itemsets):
-#     for subset in combinations(candidate, len(candidate) - 1):
-#         if frozenset(subset) not in frequent_itemsets:
-#             return True
-#     return False
+#Check if candidate has any infrequent subset
+
 def has_infrequent_subset(candidate, frequent_itemsets):
-    frequent_set = set(frequent_itemsets)
     for subset in combinations(candidate, len(candidate) - 1):
-        if frozenset(subset) not in frequent_set:
+        if frozenset(subset) not in frequent_itemsets:
             return True
     return False
 
 
-# def filter_candidates(transactions, candidates, min_support):
-#     item_counts = defaultdict(int)
-#     for transaction in transactions:
-#         for candidate in candidates:
-#             if candidate.issubset(transaction):
-#                 item_counts[candidate] += 1
-#     return {itemset: count for itemset, count in item_counts.items() if count >= min_support}
 def filter_candidates(transactions, candidates, min_support):
     item_counts = defaultdict(int)
-    transactions = [set(transaction) for transaction in transactions]
-    for candidate in candidates:
-        for transaction in transactions:
+    for transaction in transactions:
+        for candidate in candidates:
             if candidate.issubset(transaction):
                 item_counts[candidate] += 1
     return {itemset: count for itemset, count in item_counts.items() if count >= min_support}
+
 
 
 def apriori(transactions, min_support):
