@@ -75,11 +75,11 @@ def process_csv():
     # Measure execution time
     start_time = time.time()
     frequent_itemsets = apriori(transactions, min_support)
-    end_time = time.time()
-    execution_time = end_time - start_time
-
     maximal_frequent_itemsets = get_maximal_frequent_itemsets(frequent_itemsets)
     maximal_frequent_itemsets.sort(key=lambda x: (len(x), x))
+
+    end_time = time.time()
+    execution_time = end_time - start_time
 
     # Calculate total count
     total_count = len(maximal_frequent_itemsets)
@@ -88,9 +88,9 @@ def process_csv():
     formatted_output = [f"{{{','.join(map(str, itemset))}}}" for itemset in maximal_frequent_itemsets]
 
     # Print outputs
-    print(f"Minimal support: {min_support}")
-    print(f"Execution time: {execution_time:.2f} seconds")
-    print(f"Total items count: {total_count}")
+    # print(f"Minimal support: {min_support}")
+    # print(f"Execution time: {execution_time:.2f} seconds")
+    # print(f"Total items count: {total_count}")
 
     return jsonify({
         "minimal_support": min_support,
