@@ -7,14 +7,6 @@ import time
 
 app = Flask(__name__)
 
-# Helper function to find frequent 1-itemsets
-# def find_frequent_1_itemsets(transactions, min_support):
-#     item_count = defaultdict(int)
-#     for transaction in transactions:
-#         for item in transaction:
-#             item_count[frozenset([item])] += 1
-#     return {itemset for itemset, count in item_count.items() if count >= min_support}
-
 def get_frequent_1_itemsets(transactions, min_support):
     item_counts = Counter()
     for transaction in transactions:
@@ -47,24 +39,6 @@ def filter_candidates(transactions, candidates, min_support):
             if candidate.issubset(transaction):
                 item_counts[candidate] += 1
     return {itemset: count for itemset, count in item_counts.items() if count >= min_support}
-
-# Main Apriori algorithm
-# def apriori(transactions, min_support):
-#     all_frequent_itemsets = []  # Store all levels of frequent itemsets
-#     k = 1
-#     Lk = find_frequent_1_itemsets(transactions, min_support)
-#     while Lk:
-#         all_frequent_itemsets.append(Lk)
-#         Ck = apriori_gen(Lk, k + 1)
-#         item_count = defaultdict(int)
-#         for transaction in transactions:
-#             Ct = {candidate for candidate in Ck if candidate.issubset(transaction)}
-#             for candidate in Ct:
-#                 item_count[candidate] += 1
-#         Lk = {itemset for itemset, count in item_count.items() if count >= min_support}
-#         k += 1
-#     # Flatten all levels of frequent itemsets into one set and return
-#     return set(chain.from_iterable(all_frequent_itemsets))
 
 def apriori(transactions, min_support):
     frequent_itemsets = []
@@ -101,11 +75,11 @@ def process_csv():
     # Measure execution time
     start_time = time.time()
     frequent_itemsets = apriori(transactions, min_support)
-    maximal_frequent_itemsets = get_maximal_frequent_itemsets(frequent_itemsets)
-    maximal_frequent_itemsets.sort(key=lambda x: (len(x), x))
-    
     end_time = time.time()
     execution_time = end_time - start_time
+
+    maximal_frequent_itemsets = get_maximal_frequent_itemsets(frequent_itemsets)
+    maximal_frequent_itemsets.sort(key=lambda x: (len(x), x))
 
     # Calculate total count
     total_count = len(maximal_frequent_itemsets)
