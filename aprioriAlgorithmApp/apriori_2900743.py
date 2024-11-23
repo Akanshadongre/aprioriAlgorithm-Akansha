@@ -68,13 +68,14 @@ def process_csv():
     end_time = time.time()
     execution_time = end_time - start_time
 
-    # Format output
-    formatted_output = "{{" + "}{".join(",".join(map(str, sorted(itemset))) for itemset in sorted(frequent_itemsets, key=lambda x: (len(x), x))) + "}}"
+    # Format output without string representation
+    formatted_output = "{{" + "}{".join(",".join(sorted(itemset)) for itemset in sorted(frequent_itemsets, key=lambda x: (len(x), x))) + "}}"
     total_count = len(frequent_itemsets)
 
+    # Print outputs
     print(f"Minimal support: {min_support}")
     print(f"Execution time: {execution_time:.2f} seconds")
-    print(f"End - total items: {total_count}")
+    print(f"Total items count: {total_count}")
 
     return jsonify({
         "minimal_support": min_support,
