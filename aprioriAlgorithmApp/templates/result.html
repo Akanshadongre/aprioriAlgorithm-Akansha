@@ -22,14 +22,10 @@
         .results p {
             margin: 10px 0;
         }
-        .results .horizontal-list {
-            display: block;
-            white-space: nowrap;
-            overflow-x: auto;
-            padding: 10px;
-            background: #fff;
-            border: 1px solid #ddd;
-            border-radius: 5px;
+        .frequent-itemsets {
+            font-size: 16px;
+            line-height: 1.5; /* Ensures proper spacing between lines */
+            word-wrap: break-word; /* Breaks long words if necessary */
         }
     </style>
 </head>
@@ -40,9 +36,7 @@
         <p><strong>Total Execution Time:</strong> {{ execution_time }}</p>
         <p><strong>Total Frequent Itemsets:</strong> {{ total_count }}</p>
         <h3>Frequent Itemsets:</h3>
-        <div class="horizontal-list">
-            {{ result|join(', ') }}
-        </div>
+        <p class="frequent-itemsets">{{ result|join(', ') }}</p>
     </div>
     <a href="/">Back to Home</a>
 </body>
