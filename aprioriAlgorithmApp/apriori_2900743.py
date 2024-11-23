@@ -66,32 +66,21 @@ def index():
 def process_csv():
     file = request.files['file']
     min_support = int(request.form['min_support'])
-
     # Parse CSV file
     stream = io.StringIO(file.stream.read().decode("UTF8"), newline=None)
     csv_input = csv.reader(stream)
     transactions = [row for row in csv_input]
-
     # Measure execution time
     start_time = time.time()
     frequent_itemsets = apriori(transactions, min_support)
-    maximal_frequent_itemsets = get_maximal_frequent_itemsets(frequent_itemsets)
-    maximal_frequent_itemsets.sort(key=lambda x: (len(x), x))
-
     end_time = time.time()
     execution_time = end_time - start_time
-
+    maximal_frequent_itemsets = get_maximal_frequent_itemsets(frequent_itemsets)
+    maximal_frequent_itemsets.sort(key=lambda x: (len(x), x))
     # Calculate total count
     total_count = len(maximal_frequent_itemsets)
-
     # Format frequent itemsets output
     formatted_output = [f"{{{','.join(map(str, itemset))}}}" for itemset in maximal_frequent_itemsets]
-
-    # Print outputs
-    # print(f"Minimal support: {min_support}")
-    # print(f"Execution time: {execution_time:.2f} seconds")
-    # print(f"Total items count: {total_count}")
-
     return jsonify({
         "minimal_support": min_support,
         "execution_time": f"{execution_time:.2f} seconds",
