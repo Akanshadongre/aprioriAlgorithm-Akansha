@@ -7,6 +7,7 @@ import time
 
 app = Flask(__name__)
 
+# Helper function to find frequent 1-itemsets
 def find_frequent_1_itemsets(transactions, min_support):
     item_count = defaultdict(int)
     for transaction in transactions:
@@ -14,6 +15,7 @@ def find_frequent_1_itemsets(transactions, min_support):
             item_count[frozenset([item])] += 1
     return {itemset for itemset, count in item_count.items() if count >= min_support}
 
+# Generate candidate itemsets of size k
 def apriori_gen(frequent_itemsets, k):
     candidates = set()
     itemsets = list(frequent_itemsets)
@@ -26,18 +28,20 @@ def apriori_gen(frequent_itemsets, k):
                     candidates.add(candidate)
     return candidates
 
+# Check if candidate has any infrequent subset
 def has_infrequent_subset(candidate, frequent_itemsets):
     for subset in combinations(candidate, len(candidate) - 1):
         if frozenset(subset) not in frequent_itemsets:
             return True
     return False
 
+# Main Apriori algorithm
 def apriori(transactions, min_support):
-    L = []
+    all_frequent_itemsets = []  # Store all levels of frequent itemsets
     k = 1
     Lk = find_frequent_1_itemsets(transactions, min_support)
     while Lk:
-        L.append(Lk)
+        all_frequent_itemsets.append(Lk)
         Ck = apriori_gen(Lk, k + 1)
         item_count = defaultdict(int)
         for transaction in transactions:
@@ -46,7 +50,8 @@ def apriori(transactions, min_support):
                 item_count[candidate] += 1
         Lk = {itemset for itemset, count in item_count.items() if count >= min_support}
         k += 1
-    return set(chain.from_iterable(L))
+    # Flatten all levels of frequent itemsets into one set and return
+    return set(chain.from_iterable(all_frequent_itemsets))
 
 @app.route('/')
 def index():
@@ -68,9 +73,11 @@ def process_csv():
     end_time = time.time()
     execution_time = end_time - start_time
 
-    # Format output without string representation
-    formatted_output = "{{" + "}{".join(",".join(sorted(itemset)) for itemset in sorted(frequent_itemsets, key=lambda x: (len(x), x))) + "}}"
+    # Calculate total count
     total_count = len(frequent_itemsets)
+
+    # Format frequent itemsets output
+    formatted_output = "{{" + "}{".join(",".join(sorted(itemset)) for itemset in sorted(frequent_itemsets, key=lambda x: (len(x), x))) + "}}"
 
     # Print outputs
     print(f"Minimal support: {min_support}")
