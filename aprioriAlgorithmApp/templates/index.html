@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Data Mining Apriori Algorithm</title>
+    <title>Check Apriori Algorithm</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -52,8 +52,8 @@
             // Display results in a structured format
             document.getElementById("output").innerHTML = `
                 <p><strong>Minimal Support:</strong> ${data.minimal_support}</p>
-                <p><strong>Execution Time:</strong> ${data.execution_time}</p>
-                <p><strong>Total Count:</strong> ${data.total_count}</p>
+                <p><strong>Total running time:</strong> ${data.execution_time}</p>
+                <p><strong>End - total item:</strong> ${data.total_count}</p>
                 <h3>Frequent Itemsets:</h3>
                 <pre>${data.result}</pre>
             `;
@@ -61,7 +61,7 @@
     </script>
 </head>
 <body>
-    <h1>Data Mining Apriori Algorithm at Google App Engine</h1>
+    <h1>Check Apriori Algorithm</h1>
     
     <form id="uploadForm" onsubmit="submitForm(event)">
         <label for="file">Input file:</label>
