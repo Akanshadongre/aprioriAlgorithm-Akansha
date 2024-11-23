@@ -19,13 +19,17 @@
             border-radius: 5px;
             background: #f9f9f9;
         }
-        .results pre {
-            background: #fff;
+        .results p {
+            margin: 10px 0;
+        }
+        .results .horizontal-list {
+            display: block;
+            white-space: nowrap;
+            overflow-x: auto;
             padding: 10px;
+            background: #fff;
             border: 1px solid #ddd;
             border-radius: 5px;
-            white-space: pre-wrap;
-            word-wrap: break-word;
         }
     </style>
 </head>
@@ -36,7 +40,9 @@
         <p><strong>Total Execution Time:</strong> {{ execution_time }}</p>
         <p><strong>Total Frequent Itemsets:</strong> {{ total_count }}</p>
         <h3>Frequent Itemsets:</h3>
-        <pre>{{ result|join('\n') }}</pre>
+        <div class="horizontal-list">
+            {{ result|join(', ') }}
+        </div>
     </div>
     <a href="/">Back to Home</a>
 </body>
