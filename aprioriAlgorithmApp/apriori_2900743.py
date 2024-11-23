@@ -1,10 +1,9 @@
-
-
 from flask import Flask, request, jsonify, render_template
 from itertools import combinations, chain
 from collections import defaultdict
 import csv
 import io
+import time
 
 app = Flask(__name__)
 
@@ -63,16 +62,26 @@ def process_csv():
     csv_input = csv.reader(stream)
     transactions = [row for row in csv_input]
 
-    # Run Apriori algorithm
+    # Measure execution time
+    start_time = time.time()
     frequent_itemsets = apriori(transactions, min_support)
+    end_time = time.time()
+    execution_time = end_time - start_time
 
     # Format output
     formatted_output = "{{" + "}{".join(",".join(map(str, sorted(itemset))) for itemset in sorted(frequent_itemsets, key=lambda x: (len(x), x))) + "}}"
-    print(f"Minimal support: {min_support}")
-    print(f"Formatted output: {formatted_output}")
-    print(f"End - total items: {len(frequent_itemsets)}")
+    total_count = len(frequent_itemsets)
 
-    return jsonify(result=formatted_output)
+    print(f"Minimal support: {min_support}")
+    print(f"Execution time: {execution_time:.2f} seconds")
+    print(f"End - total items: {total_count}")
+
+    return jsonify({
+        "minimal_support": min_support,
+        "execution_time": f"{execution_time:.2f} seconds",
+        "total_count": total_count,
+        "result": formatted_output
+    })
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
