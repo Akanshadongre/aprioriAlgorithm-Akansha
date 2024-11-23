@@ -88,8 +88,8 @@ def index():
 #         "result": formatted_output
 #     })
 
-@app.route('/process_csv', methods=['POST'])
-def process_csv():
+@app.route('/process_result', methods=['POST'])
+def process_result():
     file = request.files['file']
     min_support = int(request.form['min_support'])
     stream = io.StringIO(file.stream.read().decode("UTF8"), newline=None)
