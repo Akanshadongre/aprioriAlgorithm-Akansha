@@ -24,7 +24,7 @@
         }
         .frequent-itemsets {
             font-size: 16px;
-            line-height: 1.5; /* Ensures proper spacing between lines */
+            line-height: 1.5;
             word-wrap: break-word; /* Breaks long words if necessary */
         }
     </style>
@@ -33,9 +33,9 @@
     <h1>Apriori Algorithm Results</h1>
     <div class="results">
         <p><strong>Minimal Support:</strong> {{ minimal_support }}</p>
-        <p><strong>Total Execution Time:</strong> {{ execution_time }}</p>
-        <p><strong>Total Frequent Itemsets:</strong> {{ total_count }}</p>
-        <h3>Frequent Itemsets:</h3>
+        <p><strong>Total running time:</strong> {{ execution_time }}</p>
+        <p><strong>End - total items:</strong> {{ total_count }}</p>
+        <h3>Itemsets:</h3>
         <p class="frequent-itemsets">{{ result|join(', ') }}</p>
     </div>
     <a href="/">Back to Home</a>
