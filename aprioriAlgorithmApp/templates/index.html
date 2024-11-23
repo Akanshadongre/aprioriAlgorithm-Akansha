@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,19 +14,17 @@
             formData.append("file", fileInput.files[0]);
             formData.append("min_support", minSupportInput.value);
 
-            const response = await fetch("/run_apriori", {
+            const response = await fetch("/process_csv", {
                 method: "POST",
                 body: formData
             });
             const data = await response.json();
-
-            // Pass data to the results page
-            window.location.href = `/result?data=${encodeURIComponent(JSON.stringify(data))}`;
+            document.getElementById("output").textContent = JSON.stringify(data.result, null, 2);
         }
     </script>
 </head>
 <body>
-    <h1>Data Mining Apriori Algorithm</h1>
+    <h1>Data Mining Apriori Algorithm at Google App Engine</h1>
     
     <form id="uploadForm" onsubmit="submitForm(event)">
         <label for="file">Input file:</label>
@@ -36,5 +35,8 @@
         
         <button type="submit">Submit</button>
     </form>
+
+    <h2>Output</h2>
+    <pre id="output"></pre>
 </body>
 </html>
