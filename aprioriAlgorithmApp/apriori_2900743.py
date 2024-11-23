@@ -106,10 +106,10 @@ def process_csv():
     formatted_output = [f"{{{','.join(map(str, itemset))}}}" for itemset in maximal_frequent_itemsets]
     return render_template(
         'result.html', 
-        "min_support": min_support,
-        "execution_time": f"{execution_time:.2f} seconds",
-        "total_count": total_count,
-        "result": formatted_output
+        minimal_support=min_support,
+        execution_time=f"{execution_time:.2f} seconds",
+        total_count=total_count,
+        result=formatted_output
     )
 
 
