@@ -103,11 +103,8 @@ def process_csv():
     maximal_frequent_itemsets = get_maximal_frequent_itemsets(frequent_itemsets)
     maximal_frequent_itemsets.sort(key=lambda x: (len(x), x))
     total_count = len(maximal_frequent_itemsets)
-    # formatted_output = [f"{{{','.join(map(str, itemset))}}}" for itemset in maximal_frequent_itemsets]
-    # result_string = "{" + "".join(formatted_output) + "}"
 
-    formatted_output = [f"{{{','.join(map(str, sorted(itemset))).strip()}}}" for itemset in maximal_frequent_itemsets]
-
+    formatted_output = [f"{{{','.join(map(str,sorted(itemset))).strip()}}}" for itemset in maximal_frequent_itemsets]
     result_string = "{" + "".join(formatted_output) + "}"
 
     return render_template(
